@@ -18,6 +18,8 @@ public record ShippingAddressInputDto(
     string? Phone = null
 );
 
+public record UpdateStatusDto(string Status);
+
 public record CreateOrderDto(
     List<OrderItemInputDto> Items,
     ShippingAddressInputDto ShippingAddress,

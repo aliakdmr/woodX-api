@@ -84,6 +84,36 @@ public class OrdersController(AppDbContext db) : ControllerBase
             : Ok(order);
     }
 
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAll()
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value
+                ?? User.FindFirst("role")?.Value;
+        if (role != "admin") return Forbid();
+
+        var orders = await db.Orders
+            .Include(o => o.Items)
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
+
+        return Ok(orders);
+    }
+
+    [HttpPatch("{id:int}/status")]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusDto dto)
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value
+                ?? User.FindFirst("role")?.Value;
+        if (role != "admin") return Forbid();
+
+        var order = await db.Orders.FindAsync(id);
+        if (order is null) return NotFound(new { message = "Sipariş bulunamadı" });
+
+        order.Status = dto.Status;
+        await db.SaveChangesAsync();
+        return Ok(order);
+    }
+
     [HttpPatch("{id:int}/cancel")]
     public async Task<IActionResult> Cancel(int id)
     {
